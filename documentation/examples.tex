@@ -1,0 +1,262 @@
+\documentclass[12pt]{amsart}
+\usepackage{jrmacros}
+%\usepackage[margin=1.2in]{geometry}
+
+\usepackage{mathtools}
+\mathtoolsset{showonlyrefs}
+
+%\usepackage{setspace}
+%\doublespace
+
+%\numberwithin{equation}{section}
+
+%Theorem envirments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}%[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\newtheorem*{theorem*}{Theorem}
+\newtheorem*{proposition*}{Proposition}
+\newtheorem*{corollary*}{Corollary}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem*{conjecture*}{Conjecture}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{philosophy}[theorem]{Philosophy}
+
+\newtheorem*{definition*}{Definition}
+\newtheorem*{example*}{Example}
+\newtheorem*{question*}{Question}
+\newtheorem*{philosophy*}{Philosophy}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newtheorem*{remark*}{Remark}
+
+\def\A{\hat{\cA}}
+\def\A{\mathbb{A}}
+\def\z#1{\zeta_{\cA_{#1}}}
+\def\I{\mathcal{I}}
+\def\ape{Ap\'{e}ry}
+\def\li{\mathrm{Li}}
+\def\hp{h_{p}}
+\def\hn{h^{[n]}}
+\def\spa{\mathrm{Span}_{\Q}}
+\def\ZZ{\hat{\zeta}}
+\def\qsh{\hat{\qs}}
+\def\hI{\hat{\I}}
+\def\bn{\mathbf{n}}
+\def\mz{\cZ_{\cM}}
+\def\tmz{\tilde{\mz}}
+\def\zm{\zeta^{\cM}}
+\def\G{\mathbb{G}}
+
+\def\mm{\cZ'}
+\def\MM{\cZ}
+\def\zm{\zeta^{\cM}}
+\def\Mh{\hat{\MM}}
+\def\ph{per_{\A}}
+\def\PH{PER_{\A}}
+\def\AA{\A[[p]^{-1}]}
+
+
+\def\p{\mathbf{p}}
+\def\A{\cA}
+\def\Ah{\hat{\A}}
+\def\Ai{\Ah[\p^{-1}]}
+\def\M{\mathcal{Z}}
+\def\MM{\M'}
+\def\per{\hat{per}}
+\def\zm{\zeta^{\mathfrak{m}}}
+\def\zmm{\zeta^{\MM}}
+\def\zb{\overline{\zeta}_p}
+\def\PP{\cP}
+\def\PPm{\PP^{\cM}}
+
+
+\def\cl{\mathrm{Cl}}
+
+\def\ai{\mathbb{I}}
+\def\hv{\hat{v}}
+
+\def\fil{\mathrm{Fil}}
+\def\p{\mathbf{p}}
+\def\hm{h^{\cM}}
+%\def\spec{\mathrm{Spec}}
+\def\gal{\mathrm{Gal}}
+\def\am{a^{\cM}}
+
+%\hidenotes
+
+\def\lie{\mathrm{Lie}}
+\renewcommand{\thepart}{\Roman{part}}
+
+%Comment macros
+\def\todo#1{\inline{Green}{To do:}{#1}}
+%\hidenotes
+
+\begin{document}
+\title{MHS examples}
+\author{Julian Rosen}
+\date{\today}
+\maketitle
+%\begin{abstract}
+%\end{abstract}
+
+This document lists some example computations for the Python 2.7 package \verb|mhs|. The software accompanies the papers \cite{Ros16a} and \cite{Ros16b}, and makes use of computations from the MZV data mine \cite{Blu10}. All of the examples in this document can be found in the iPython notebook \verb|mhs_examples.ipynb|. The most recent version can always be found at
+\begin{center}
+\url{https://sites.google.com/site/julianrosen/mhs}.
+\end{center}
+
+\section{Computations}
+
+
+\noindent First, we import the mhs package. The default weight is $8$.
+\bigskip
+
+\begin{verbatim}
+>>> from mhs import *
+Imported data through weight 9
+\end{verbatim}
+\bigskip
+
+\noindent The package uses a basis for the space of multiple harmonic sums. Let's see the basis.
+
+\begin{verbatim}
+
+>>> mhs_basis()
+[(), (2, 1), (4, 1), (4, 1, 1), (6, 1), (5, 2, 1), (6, 1, 1)]
+
+\end{verbatim}
+
+\noindent In other words, modulo $p^9$, every weighted multiple harmonic sum can we written as a rational linear combination of
+\[
+1=\hp(\varnothing),\; \hp(2,1),\;\hp(4,1),\;\hp(4,1,1),\;\hp(6,1),\;\hp(5,2,1),\;\hp(6,1,1).
+\]
+\bigskip
+
+\noindent The computer can compute expansions in terms of this basis.
+
+\begin{verbatim}
+
+>>> a = Hp(1, 2, 3); a.disp()
+\end{verbatim}
+$\displaystyle\H(1,2,3)$
+
+\begin{verbatim}
+
+>>> a.mhs()
+\end{verbatim}
+\[
+-2H_{p-1}(4, 1, 1)- \frac{11}{28}pH_{p-1}(6, 1)+p^{2}\left(- \frac{27}{7}H_{p-1}(5, 2, 1)-9H_{p-1}(6, 1, 1)\right)+O(p^{3})
+\]
+
+
+\noindent The computer is telling us that the congruence
+\begin{gather*}
+\H(1,2,3)\equiv -2H_{p-1}(4, 1, 1)- \frac{11}{28}pH_{p-1}(6, 1)\\
+\hspace{40mm}+p^{2}\left(- \frac{27}{7}H_{p-1}(5, 2, 1)-9H_{p-1}(6, 1, 1)\right)\mod p^3
+\end{gather*}
+holds for all sufficiently large $p$, and indeed the computer has found a \emph{proof} of this congruence.
+\bigskip
+
+\noindent We can also find expansions in terms of $p$-adic multiple zeta values. For example, binomial coefficients.
+
+\begin{verbatim}
+
+>>> b = binp(5,2); b.disp()
+\end{verbatim}
+$\displaystyle
+{5p \choose 2p}
+$
+\begin{verbatim}
+
+>>> b.mzv()
+\end{verbatim}
+\[
+10-300p^{3}\zeta_p(3)-5700p^{5}\zeta_p(5)+4500p^{6}\zeta_p(3)^{2}-108300p^{7}\zeta_p(7)+171000p^{8}\zeta_p(3)\zeta_p(5)+O(p^{9})
+\]
+\smallskip
+
+\noindent This is a lot of output. If we only want an expansion modulo e.g.\  $p^6$:
+
+\begin{verbatim}
+
+>>> b.mzv(err=6)
+\end{verbatim}
+\[
+10-300p^{3}\zeta_p(3)-5700p^{5}\zeta_p(5)+O(p^{6})
+\]
+\smallskip
+
+\noindent Another quantity we can compute:
+\begin{verbatim}
+
+>>> c = curp(2,4); c.disp()
+\end{verbatim}
+$\displaystyle\sum_{\substack{n_1 + n_2 + n_3 + n_4 = p^2\\p\nmid n_{1}n_{2}n_{3}n_{4}}}\frac{1}{n_1n_2n_3n_4}$
+
+\begin{verbatim}
+
+>>> c.mhs()
+\end{verbatim}
+$\displaystyle - \frac{24}{5}p^{2}H_{p-1}(4, 1) + \frac{28}{15}p^{3}H_{p-1}(4, 1, 1) + O(p^{4})$
+\smallskip
+
+\noindent If we want higher precision, we should import data of higher weight.
+\begin{verbatim}
+>>> import_data(9)
+Imported data through weight 9
+
+>>> c = curp(2,4); c.mhs()
+\end{verbatim}
+\[
+- \frac{24}{5}p^{2}H_{p-1}(4, 1) + \frac{28}{15}p^{3}H_{p-1}(4, 1, 1) + p^{4}\left(- \frac{24}{5}H_{p-1}(4, 1) + \frac{4421}{420}H_{p-1}(6, 1)\right) + O(p^{5})
+\]
+\smallskip
+
+The software can also handle various other nested sums. For example, we can compute something like
+\[
+\sum_{n=1}^{p-1}\frac{(-1)^n}{n+2}{p+n+1\choose n-1}{p\choose n}.
+\]
+
+\begin{verbatim}
+>>> import_data(8)
+Imported data through weight 8
+>>> a = (BIN(1,-1)*BINN(0,0)*nn(-2)).sum(1,0).e_p()
+>>> a.mhs()
+\end{verbatim}
+
+\begin{gather*}
+\frac{1}{2} -  \frac{5}{4}p + \frac{15}{8}p^{2} -  \frac{41}{16}p^{3} + p^{4}\left(\frac{99}{32} -  \frac{1}{3}H_{p-1}(2, 1)\right) -  \frac{221}{64}p^{5} \\
++ p^{6}\left(\frac{471}{128} + \frac{5}{12}H_{p-1}(2, 1) -  \frac{7}{30}H_{p-1}(4, 1)\right) + O(p^{7})
+\end{gather*}
+
+\begin{verbatim}
+
+>>> a.mzv()
+\end{verbatim}
+\begin{gather*}
+\frac{1}{2} -  \frac{5}{4}p + \frac{15}{8}p^{2} -  \frac{41}{16}p^{3} + p^{4}\left(\frac{99}{32} - \zeta_p(3)\right) -  \frac{221}{64}p^{5} \\
++ p^{6}\left(\frac{471}{128} + \frac{5}{4}\zeta_p(3) - 3\zeta_p(5)\right) + O(p^{7})
+\end{gather*}
+\smallskip
+
+The software uses MathJax to render the output in a Jupyter notebook. If you would prefer to get non-Tex output, this can be done.
+\begin{verbatim}
+
+>>> a.mzv(tex=False)
+'1/2 -  5/4p + 15/8p^2 -  41/16p^3 + p^4(99/32 - zeta_p(3)) -  221/64p^5
++ p^6(471/128 + 5/4zeta_p(3) - 3zeta_p(5)) + O(p^7)'
+\end{verbatim}
+
+\bibliographystyle{hplain}
+\bibliography{jrbiblio}
+\end{document}
