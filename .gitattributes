@@ -1,1 +1,4 @@
 * text eol=lf
+data_mine/* linguist-vendored
+mhs_data/* linguist-vendored
+documentation/* linguist-vendored
