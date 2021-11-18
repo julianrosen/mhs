@@ -1,6 +1,6 @@
 import sympy as sp
 
-from sage_compatibility import Int, Rat, Number
+from .sage_compatibility import Int, Rat, Number
 
 # Keeps track of stuffle products that have been computed
 _mul={}
@@ -94,7 +94,7 @@ class qsym:
     def lcat(self, s):
         """Concatenate s to the left of each monomial quasi-symmetric function."""
         T = qsym()
-        if isinstance(s, Int):
+        if not isinstance(s,tuple):
             a = (s, )
         else:
             a = s

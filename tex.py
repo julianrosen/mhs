@@ -1,4 +1,4 @@
-from sage_compatibility import latex
+from .sage_compatibility import latex
 
 def tstr(s):
     """Converts a tuple to a string (without extra comma)"""
@@ -46,11 +46,11 @@ def tex_write(D,f1,o1,f2,o2,err=99999,first=False,var='p'):
         ordering of inner symbol
     Output: String of latex
     """
-    K = D.keys()
+    K = list(D.keys())
     for x in K:
         if D[x] == 0:
             D.pop(x)
-    K = D.keys()
+    K = list(D.keys())
     K.sort(key=lambda x:(o1(x),o2(x)))
     O1 = []
     for x in K:
@@ -87,11 +87,11 @@ def tex_write(D,f1,o1,f2,o2,err=99999,first=False,var='p'):
     return S
 
 def tex_write_single(D,f,o,err=99999,var='p'):
-    K = D.keys()
+    K = list(D.keys())
     for x in K:
         if D[x] == 0:
             D.pop(x)
-    K = D.keys()
+    K = list(D.keys())
     K.sort(key=o)
     S = ""
     for x in K:

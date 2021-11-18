@@ -1,4 +1,4 @@
-from sage_compatibility import Int, Rat, numer, denom
+from .sage_compatibility import Int, Rat, numer, denom
 
 def v(p, x):
     """Compute p-adic valuation of x.

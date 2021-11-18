@@ -4,19 +4,19 @@
 # MZV algebra basis
 
 # MZV monomial basis
-()
+[]
 
 # MZV in monomial basis
-(2,): (0,)
-(): (1,)
-(1, 1): (0,)
-(1,): (0,)
+(): [1]
+(2,): [0]
+(1,): [0]
+(1, 1): [0]
 
 # MHS in MZV monomial basis
-(2,): [0]
 (): [1]
-(1, 1): [0]
 (1,): [0]
+(2,): [0]
+(1, 1): [0]
 
 # MHS basis
 ()

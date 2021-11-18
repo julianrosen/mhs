@@ -1,29 +1,49 @@
-from qsym import qsym
-from global_vars import set_vars
+# Multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import Pool
+_max_workers = 10 # Number of cpus
+
+
+
+from .qsym import qsym
+from .global_vars import set_vars
 import sympy as sp
 mat = sp.Matrix
 from os.path import join, isfile, isdir, realpath, dirname
 from os import makedirs, getcwd
 import random
 import bz2
-from misc import lists, comps_i
+from .misc import lists, comps_i
+from time import time
+from .sage_compatibility import Int, Rat, Number, _sage
+import datetime
 
-from sage_compatibility import Int, Rat, Number
 
 MHS_DATA_DIR = join(dirname(realpath(__file__)), "mhs_data")
 MZV_DATA_MINE_DIR = join(dirname(realpath(__file__)), "data_mine")
+
+
+def parallel(func,max_workers=_max_workers):
+    def new_func(L):
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            results = [executor.submit(func,q) for q in L]
+            for f in as_completed(results):
+                yield f.result()
+    return new_func
+
+
 
 def import_data(n,silent=False):
     max_weight = n
     filename = join(MHS_DATA_DIR, "mhs_data_%i.dat" % n)
     if not isfile(filename):
-        print "Data file " + join('.', filename) + " not found."
-        print "Would you like to create this file [y/n]: ",
-        c = raw_input()
+        print("Data file " + join('.', filename) + " not found.")
+        print("Would you like to create this file [y/n]: ", end=' ')
+        c = eval(input())
         if c != '' and c[0] in ['y', 'Y']:
             if not create_data(n):
                 return
-    a = file(filename, "U")
+    a = open(filename, "U")
     read(a)
     mzv_alg = read(a)
     mzv_mono = read(a)
@@ -37,7 +57,7 @@ def import_data(n,silent=False):
     set_vars(max_weight, num, mhs_basis, weights, mzv_alg,
       mzv_mono, mzv_to_mono, mono_to_basis, mhs_to_mono)
     if not silent:
-        print "Imported data through weight %i" % max_weight
+        print("Imported data through weight %i" % max_weight)
     return None
 
 def tuple_to_word(s):
@@ -82,6 +102,8 @@ def str_to_mzv_dict(q):
             if s != None:
                 T[s] = r
             s = ""
+            if x[0] == "+":
+                x = x[1:]
             r = Rat(x)
         else:
             s += '*' + x
@@ -125,7 +147,7 @@ def read_prc(D, filename):
     if filename[-3:] == 'bz2':
         a = bz2.BZ2File(filename, "rU")
     else:
-        a = file(filename, "rU")
+        a = open(filename, "rU")
     L = get_chunk(a)
     while L != '':
         add_line_to_dict(D, L)
@@ -138,11 +160,11 @@ def read_prc(D, filename):
 def read_hexc(D, W):
     """Read hexc.h and add to dictionary"""
     if not isfile(join(MZV_DATA_MINE_DIR, "hexc.h")):
-        print "Cannot find necessary file " + join(MZV_DATA_MINE_DIR, "hexc.h")
-        print "This file can be obtained from the MZV data mine"
-        print "http://www.nikhef.nl/~form/datamine/mzv/complete/complete.html"
+        print("Cannot find necessary file " + join(MZV_DATA_MINE_DIR, "hexc.h"))
+        print("This file can be obtained from the MZV data mine")
+        print("http://www.nikhef.nl/~form/datamine/mzv/complete/complete.html")
         return False
-    a = file(join(MZV_DATA_MINE_DIR, "hexc.h"), "rU")
+    a = open(join(MZV_DATA_MINE_DIR, "hexc.h"), "rU")
     for L in a:
         if L == "#procedure mzv2\n":
             break
@@ -165,7 +187,7 @@ def read_all(W):
         elif isfile(join(MZV_DATA_MINE_DIR, "mzv%i.prc.bz2" % i)):
             read_prc(D, join(MZV_DATA_MINE_DIR, "mzv%i.prc.bz2" % i))
         else:
-            print "Could not find file %s or %s" % (join(MZV_DATA_MINE_DIR, "mzv%i.prc" % i), join(MZV_DATA_MINE_DIR, "mzv%i.prc.bz2" % i))
+            print("Could not find file %s or %s" % (join(MZV_DATA_MINE_DIR, "mzv%i.prc" % i), join(MZV_DATA_MINE_DIR, "mzv%i.prc.bz2" % i)))
             return
     return D
 
@@ -189,9 +211,9 @@ def get_gens(s, B):
             if t not in B:
                 B.append(t)
                 if t == (2,):
-                    print "Added (2,)"
-                    print "s: ", s
-                    print "L: ", L
+                    print("Added (2,)")
+                    print("s: ", s)
+                    print("L: ", L)
 
 
 def get_gens_D(D):
@@ -209,7 +231,7 @@ def get_gens_D(D):
 def renormalize(D, W):
     """Add stuffle-regularized values (with zeta(1) = 0)"""
     for i in range(W):
-        for s in D.keys():
+        for s in list(D.keys()):
             if sum(s) >= W or (1,) + s in D:
                 continue
             a = qsym((1,)) * qsym(s)
@@ -230,7 +252,7 @@ def get_vs_basis(B, W):
     S = get_vs_basis(B[:-1], W)
     T = []
     for i in S:
-        for j in range((W - sum(i[q] * sum(B[q]) for q in range(len(B) - 1))) / sum(B[-1]) + 1):
+        for j in range((W - sum(i[q] * sum(B[q]) for q in range(len(B) - 1))) // sum(B[-1]) + 1):
             T.append(i + [j])
     def kk(L):
         A = list(L)
@@ -283,7 +305,7 @@ def mult_mzv(L1, L2, BB):
         for j in range(len(L2)):
             if list(mat(BB[i]) + mat(BB[j])) in BB:
                 T[BB.index(list(mat(BB[i]) + mat(BB[j])))] += L1[i] * L2[j]
-    return T
+    return [[x] for x in T]
 
 # Express an mhs in terms of p-adic MZV
 def mhs_to_mzv(s, W, D, BB):
@@ -304,9 +326,13 @@ def find_mhs_basis(E, W):
     M = mat([E[x] for x in L]).transpose().rref()
     return L, M
 
+# Garbage
+def mhs_to_mzv_modified(s):
+    return s,mhs_to_mzv(*s)
+
 # Create the data file mhs_data_W.dat
-def create_data(W,z2=False):
-    print "Attempting to create %s" % join(MHS_DATA_DIR, "mhs_data_%i.dat" % W)
+def create_data(W,z2=False,max_workers=_max_workers,power=None):
+    print("Attempting to create %s" % join(MHS_DATA_DIR, "mhs_data_%i.dat" % W))
     D = read_all(W)
     if D is None:
         return
@@ -320,32 +346,58 @@ def create_data(W,z2=False):
     count = 0
     num = 2 ** W - 2
     target = 1
-    print "MZV data read successfully"
-    print "Computing expansion for MHS in terms of MZV (this may take some time)"
-    for s in comps_i(W):
-        E[s] = mhs_to_mzv(s, W, D, BB)
-        count += 1
-        if W in [8, 9]:
-            if count * 10 > target * num:
-                print "%i0%% done" % target
-                target += 1
-        elif W >= 10:
-            if count * 100 > target * num:
-                print "%i%% done" % target
-                a.flush()
-                target += 1
+    print("MZV data read successfully")
+    print("Computing expansion for MHS in terms of MZV (this may take some time)")
+    start_time = time()
+    if max_workers > 1:
+        #L = [(s,W,D,BB) for s in comps_i(W)]
+        #mhs_to_mzv_par = parallel(mhs_to_mzv_modified,max_workers)
+        if power is None:
+            if W in [10,11]:
+                power = 10 ** (W-9)
+            elif W >= 12:
+                power = 10 ** (W-10)
+        else:
+            power = 10 ** power
+        chunksize = max(2,2**W//(max_workers*20))
+        with Pool(max_workers) as pool:
+            start_time = time()
+            for s in pool.imap_unordered(mhs_to_mzv_modified,((s,W,D,BB) for s in comps_i(W)),chunksize=chunksize):
+        #for s in mhs_to_mzv_par(L):
+                E[s[0][0]] = s[1]
+                count += 1
+                if W >= 10 and count * power > target * num:
+                    est = int((time() - start_time) * (num - count)) // count
+                    est_s = str(datetime.timedelta(seconds=est))
+                    frac = target / power
+                    print(f"{frac} completed (at this rate, {est_s} remaining)",flush=True)
+                    target += 1
+    else:
+        for s in comps_i(W):
+            E[s] = mhs_to_mzv(s, W, D, BB)
+            count += 1
+            if W in [8, 9]:
+                if count * 10 > target * num:
+                    print("%i0%% done" % target)
+                    target += 1
+            elif W >= 10:
+                if count * 100 > target * num:
+                    print("%i%% done" % target)
+                    a.flush()
+                    target += 1
     L, M = find_mhs_basis(E, W)
     make_dir("mhs_data")
-    a = file(join(MHS_DATA_DIR, "mhs_data_%i.dat" % W), 'w')
+    a = open(join(MHS_DATA_DIR, "mhs_data_%i.dat" % W), 'w')
     _max_weight = W
     #a.write("# Weight\n%i\n\n" % W)
     #a.write("# MHS basis\n")
     b = [L[i] for i in M[1]]
     b.reverse()
     _mhs_basis = b
-    #for i, x in enumerate(b):
-        #if i >= 1:
+    for i, x in enumerate(b):
+        if i >= 1:
             #a.write(", ")
+            pass
         #a.write(str(x))
     #a.write("\n\n# MHS in terms of basis\n")
     _mhs_to_basis = {}
@@ -356,31 +408,60 @@ def create_data(W,z2=False):
         #a.write(str(L[i]) + ": " + str(b) + "\n")
     #a.write("\n# MZV algebra basis\n")
     _mzv_alg = B
-    #for i in range(len(B)):
+    for i in range(len(B)):
         #a.write(str(B[i]))
-        #if i < len(B) - 1:
+        if i < len(B) - 1:
             #a.write(", ")
+            pass
     #a.write("\n\n# MZV monomial basis\n")
     _mzv_mono = BB
-    #for x in BB:
+    for x in BB:
         #a.write(str(x) + '\n')
+        pass
     #a.write("\n# MZV in terms of monomial basis\n")
     LL = list(D.keys())
     def kk(s):
         return [sum(s), -len(s)] + list(s)
     _mzv_to_mono = D
     _mzv_to_mono_key = lambda s:[sum(s), -len(s)] + list(s)
-    #LL.sort(key = kk)
-    #for x in LL:
+    LL.sort(key = kk)
+    for x in LL:
         #a.write(str(x) + ": " + str(D[x]) + "\n")
+        pass
     #a.write("\n# MHS basis in terms of monomial basis")
-    #b = list(M[1])
-    #b.reverse()
-    #for i in b:
+    b = list(M[1])
+    b.reverse()
+    for i in b:
         #a.write('\n' + str(L[i]) + ": " + str(E[L[i]]))
+        pass
     #a.write('\n')
-    #a.close()
-    print "File %s created successfully!!" % join(MHS_DATA_DIR, "mhs_data_%i.dat" % W)
+    _mhs_to_mzv = E
+    Q = [E[s] for s in _mhs_basis]
+    a.write(f"# Weight\n{W}\n\n# MZV algebra basis\n")
+    for s in _mzv_alg:
+        a.write(f"{s}\n")
+    a.write("\n# MZV monomial basis\n")
+    for s in _mzv_mono:
+        ss = tuple(s)
+        a.write(f"{ss}\n")
+    a.write("\n# MZV in monomial basis\n")
+    for s in _mzv_to_mono:
+        thing = _mzv_to_mono[s]
+        a.write(str(s) + ": " + str(thing) + "\n")
+    a.write("\n# MHS in MZV monomial basis\n")
+    for s in _mhs_to_mzv:
+        thing = _mhs_to_mzv[s]
+        a.write(str(s) + ": " + str(thing) + "\n")
+    a.write("\n# MHS basis\n")
+    for s in _mhs_basis:
+        a.write(str(s) + "\n")
+    a.write("\n# MZV monomials to MHS basis\n")
+    Qi = mat(Q)**(-1)
+    for i in range(Qi.rows):
+        x = Qi.row(i)
+        a.write(str(list(x)) + "\n")
+    a.write("\n")
+    a.close()
     return None
 
 # Set up a distributed version of make_data
@@ -388,18 +469,18 @@ def prep_dist(W, n):
     a = []
     make_dir("mhs_data", "dist")
     for i in range(n):
-        a.append(file(join(MHS_DATA_DIR,"dist","mhs_comps_"+str(W)+"_"+str(i)),"w"))
+        a.append(open(join(MHS_DATA_DIR,"dist","mhs_comps_"+str(W)+"_"+str(i)),"w"))
     i = 0
     for s in comps_i(W):
         a[i].write(str(s) + '\n')
         i = (i + 1) % n
     for i in range(n):
         a[i].close()
-    print "Ready for distributed computing on %i cores" % n
+    print("Ready for distributed computing on %i cores" % n)
 
 # Perform distrubuted version of make_data
 def dist(W, i, n):
-    print "Starting computation %i of %i" % (i, n)
+    print("Starting computation %i of %i" % (i, n))
     D = read_all(W)
     renormalize(D, W)
     mod_z2(D)
@@ -410,20 +491,20 @@ def dist(W, i, n):
     count = 0
     num = (2 ** W - 2) / n
     target = 1
-    print "MZV data read successfully"
-    print "Computing expansion for MHS in terms of MZV (this may take some time)"
-    b = file(join(MHS_DATA_DIR, "dist","mhs_comps_" + str(W) + "_" + str(i)))
-    a = file(join(MHS_DATA_DIR, "dist","mhs_data_" + str(W) + "_" + str(i) + ".dat"), "w")
+    print("MZV data read successfully")
+    print("Computing expansion for MHS in terms of MZV (this may take some time)")
+    b = open(join(MHS_DATA_DIR, "dist","mhs_comps_" + str(W) + "_" + str(i)))
+    a = open(join(MHS_DATA_DIR, "dist","mhs_data_" + str(W) + "_" + str(i) + ".dat"), "w")
     for L in b:
         a.write(L[:-1] + ": " + str(mhs_to_mzv(eval(L), W, D, BB)) + "\n")
         count += 1
         if count * 100 > target * num:
-            print "%i%% done" % target
+            print("%i%% done" % target)
             a.flush()
             target += 1
     a.close()
     b.close()
-    print "Done with computation %i of %i" % (i, n)
+    print("Done with computation %i of %i" % (i, n))
 
 # Create the data file mhs_data_W.dat
 def finish_dist(W, n):
@@ -438,12 +519,12 @@ def finish_dist(W, n):
     num = 2 ** W - 2
     target = 1
     for i in range(n):
-        q = file(join(MHS_DATA_DIR, "dist","mhs_data_" + str(W) + "_" + str(i) + ".dat"))
+        q = open(join(MHS_DATA_DIR, "dist","mhs_data_" + str(W) + "_" + str(i) + ".dat"))
         for L in q:
             E[eval(L.split(": ")[0])] = [Rat(x) for x in L.split(": ")[1][1:-2].split(",")]
         q.close()
     L, M = find_mhs_basis(E, W)
-    a = file(join(MHS_DATA_DIR, "mhs_data_%i.dat" % W), 'w')
+    a = open(join(MHS_DATA_DIR, "mhs_data_%i.dat" % W), 'w')
     a.write("# Weight\n%i\n\n" % W)
     a.write("# MHS basis\n")
     b = [L[i] for i in M[1]]
@@ -479,7 +560,7 @@ def finish_dist(W, n):
         a.write('\n' + str(L[i]) + ": " + str(E[L[i]]))
     a.write('\n')
     a.close()
-    print "File 'mhs_data_%i.dat' created successfully!!" % W
+    print("File 'mhs_data_%i.dat' created successfully!!" % W)
     return None
 
 def make_dir(*L):
@@ -519,7 +600,7 @@ def write(fi,s,description=None,key=None):
         fi.write(description)
     fi.write("\n")
     if isinstance(s,dict):
-        K = s.keys()
+        K = list(s.keys())
         if key is not None:
             K.sort(key=key)
         for x in K:

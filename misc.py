@@ -1,5 +1,5 @@
-from sage_compatibility import binomial, bernoulli
-from global_vars import mzv_alg, mzv_mono
+from .sage_compatibility import binomial, bernoulli
+from .global_vars import mzv_alg, mzv_mono
 
 # Coefficient of x^d in Sum_{n=1}^x n^k
 def psc(k, d):
@@ -59,7 +59,7 @@ def lists(k, W):
 # Generator for binary lists of length k
 def bn(k):
     if k < 0:
-        print k
+        print(k)
         raise ValueError("Input needs to be a non-negative integer")
     if k == 0:
         yield []

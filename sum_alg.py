@@ -1,11 +1,11 @@
-from sage_compatibility import Int, Rat, binomial as bi, Number
+from .sage_compatibility import Int, Rat, binomial as bi, Number
 from mhs import MhsAlg, aperybp
-from lifts import P, Hp
-from global_vars import max_weight
+from .lifts import P, Hp
+from .global_vars import max_weight
 from sympy import var, Symbol, poly, S as SS
-from qsym import qsym
-from rational import MHS, MHS_approx, red, v
-from misc import psc, psc_
+from .qsym import qsym
+from .rational import MHS, MHS_approx, red, v
+from .misc import psc, psc_
 
 import sympy.polys.partfrac as pf
 import sys
@@ -69,7 +69,7 @@ class SumAlg():
             self.small = False
             self.desc = r'\text{A sequence depending on $p$}'
         else:
-            print type(s)
+            print((type(s)))
             raise ValueError('Cannot construct instance from this data type')
 
             
@@ -81,7 +81,7 @@ class SumAlg():
     def disp(self):
         """Displays a human-readable description, if one is available"""
         if self.desc is None:
-            print r'\text{A sequence depending on $p$}'
+            print(r'\text{A sequence depending on $p$}')
         else:
             display(Math(self.desc))
         return None
@@ -106,15 +106,7 @@ class SumAlg():
         return T
 
     def __mul__(self, s):
-        if isinstance(s,Number):
-            if s == 0:
-                return SumAlg()
-            T = SumAlg(self)
-            T.clean()
-            for x in T.data:
-                T.data[x] *= s
-            return T
-        elif isinstance(s,SumAlg):
+        if isinstance(s,SumAlg):
             T = SumAlg()
             T.small = self.small or s.small
             T.err = min(self.err+s.v(),s.err+self.v())
@@ -124,9 +116,24 @@ class SumAlg():
                     if c != 0 and weight_s(x,T.small)+weight_s(y,T.small)<T.err:
                         T += c*SumAlg(mult(x,y))
             return T
+        else:
+            try:
+                s = Rat(s)
+            except:
+                try:
+                    s = Rat(int(s))
+                except:
+                    raise ValueError(s)
+            if s == 0:
+                return SumAlg()
+            T = SumAlg(self)
+            T.clean()
+            for x in T.data:
+                T.data[x] *= s
+            return T
 
     def __sub__(self,s):
-        return self + (-1)*s
+        return self + Rat(-1)*s
 
     def __radd__(self,s):
         return self + s
@@ -135,7 +142,7 @@ class SumAlg():
         return self*s
 
     def __rsub__(self,s):
-        return (-1)*self + s
+        return Rat(-1)*self + s
 
     def __pow__(self,n):
         if n == 0:
@@ -150,7 +157,7 @@ class SumAlg():
         return err
     
     def disp(self):
-        print self.data
+        print((self.data))
         return None
     
     def old__repr__(self):
@@ -191,17 +198,17 @@ class SumAlg():
         T = SumAlg(1) - SumAlg(y)
         vv = T.v()
         if vv < 1:
-            print "c: ", c.data
-            print "self: ", self.data
-            print "y: ", y.data
-            print "T: ", T.data
-            print "Element is not invertible"
+            print(("c: ", c.data))
+            print(("self: ", self.data))
+            print(("y: ", y.data))
+            print(("T: ", T.data))
+            print("Element is not invertible")
             return None
         A = SumAlg(1)
         B = SumAlg(1)
         A.err = T.err
         B.err = T.err
-        for n in range(min(A.err / vv + 1, max_weight()+1)):
+        for n in range(min(A.err // vv + 1, max_weight()+1)):
             B *= T
             A += B
         A.err = min(A.err, max_weight())
@@ -341,13 +348,13 @@ class SumAlg():
         T = SumAlg(0)
         assert w <= 1 or not self.small
         if alert:
-            print "There are %i entries" % len(self.data)
+            print(("There are %i entries" % len(self.data)))
             A = 0
         for x in self.data:
             if alert:
-                print "Starting entry %i" %A
-                print "x: ", x
-                print ""
+                print(("Starting entry %i" %A))
+                print(("x: ", x))
+                print("")
                 sys.stdout.flush()
                 A += 1
             if weight_s(x,self.small) >= T.err:
@@ -492,7 +499,7 @@ def from_rat(f):
             T.data[(0,a,b,())] = D[(a,b)]
         return T
     else:
-        print "n,d: ",n,d
+        print(("n,d: ",n,d))
         raise ValueError('Pole at non-integral value')
         
 def maxz(L):
@@ -603,23 +610,23 @@ def test(a,b):
     ds = str(diff)
     if diff >= 0:
         ds = '+' + ds
-    print "Supposed to be:\t %i"%a.err
-    print "Difference:\t %s"%ds
+    print(("Supposed to be:\t %i"%a.err))
+    print(("Difference:\t %s"%ds))
     if fail:
-        print "Failed!!!"
+        print("Failed!!!")
     else:
-        print "Passed"
+        print("Passed")
 
 def BINN(a,b,k=1):
     """The binomial coefficient (-1)^n {kp+a\choose n+b}"""
-    return (-1)**(b%2) * BIN(b-a-1,b,-k)
+    return Rat(-1)**(b%2) * BIN(b-a-1,b,-k)
 
 def z3_altp():
     a = sum(PN(t-1,-2-t) for t in range(max_weight()))
     a.small = True
-    b = sum((-1)**(t+1)*SumAlg((2*t,Inf,0,t*(2,))) for t in range(1,max_weight()/2))
+    b = sum((-1)**(t+1)*SumAlg((2*t,Inf,0,t*(2,))) for t in range(1,max_weight()//2))
     b.small = True
-    c = sum(b**t for t in range(max_weight()/2))
+    c = sum(b**t for t in range(max_weight()//2))
     T = Hp(3) - (a*c).sum().e_p()/2
     T.desc = r"\frac{5}{2}\sum_{n=1}^{p-1}\frac{(-1)^{n-1}}{n^3 {2n\choose n}}"
     return T
@@ -627,10 +634,10 @@ def z3_altp():
 def aperyap():
     a = sum(PN(t-1,-2-t) for t in range(max_weight()))
     a.small = True
-    b = sum((-1)**(t+1)*SumAlg((2*t,Inf,0,t*(2,))) for t in range(1,max_weight()/2))
+    b = sum((-1)**(t+1)*SumAlg((2*t,Inf,0,t*(2,))) for t in range(1,max_weight()//2))
     b.small = True
-    c = sum(b**t for t in range(max_weight()/2))
-    d = (a*c).sum(1,1)/2
+    c = sum(b**t for t in range(max_weight()//2))
+    d = (a*c).sum(1,1)*(Rat(1)/2)
     x = BIN(-1,0)
     y = BINN(-1,0)
     x.small = True

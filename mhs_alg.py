@@ -1,11 +1,11 @@
 from sympy import Sum, var, poly
-from sage_compatibility import Int, Rat, Number, prod, latex, factorial, binomial
-from qsym import qsym
-from global_vars import max_weight, num, mzv_alg, mono_to_basis, mhs_to_mono, mzv_mono, mzv_to_mono, weights, mhs_basis
-from rational import MHS_approx, red
-from misc import psc, psc_, D_add, comps, comps_i, lists, wt
-from tex import error_tex, tex_write, tstr, monomial, un_texify, tex_write_single, fix_pow, fix_prod
-from misc import D_add, wt, bn, decomps, S_min_v
+from .sage_compatibility import Int, Rat, Number, prod, latex, factorial, binomial
+from .qsym import qsym
+from .global_vars import max_weight, num, mzv_alg, mono_to_basis, mhs_to_mono, mzv_mono, mzv_to_mono, weights, mhs_basis
+from .rational import MHS_approx, red
+from .misc import psc, psc_, D_add, comps, comps_i, lists, wt
+from .tex import error_tex, tex_write, tstr, monomial, un_texify, tex_write_single, fix_pow, fix_prod
+from .misc import D_add, wt, bn, decomps, S_min_v
 from IPython.display import display, Math
 
 
@@ -54,7 +54,7 @@ class MhsAlg():
     def disp(self):
         """Displays a human-readable description, if one is available"""
         if self.desc is None:
-            print "<An element of the MHS algebra>"
+            print("<An element of the MHS algebra>")
         else:
             display(Math(self.desc))
         return None
@@ -125,7 +125,7 @@ class MhsAlg():
                     D_add(D,(x[0]-wt(x[1]),j),self.data[x]*mono_to_basis()[i][j])
                     if i != 0:
                         e = min(e,x[0] + max_weight() + 1)
-        K = D.keys()
+        K = list(D.keys())
         for x in K:
             if x[0]+weights()[x[1]] >= e:
                 D.pop(x)
@@ -141,7 +141,7 @@ class MhsAlg():
                     
     
     def clean(self):
-        K = self.data.keys()
+        K = list(self.data.keys())
         for x in K:
             if self.data[x] == 0 or x[0] >= self.err:
                 self.data.pop(x)
@@ -177,7 +177,7 @@ class MhsAlg():
                         T += self.data[x]*s.data[y]*MhsAlg(_mul(x,y))
             T.desc = None
             return T
-        print "Mul just ran off the bottom, ", type(s)
+        print(("Mul just ran off the bottom, ", type(s)))
         raise ValueError("Oops")
 
     def __sub__(self,s):
@@ -215,7 +215,7 @@ class MhsAlg():
         u = len(mzv_alg()) * (0,)
         for x in self.data:
             if x[0] == VV and x[1] != mzv_mono()[0]:
-                print "Element is not invertible"
+                print("Element is not invertible")
                 return None
         c = self.data[(VV,u)]
         T = MhsAlg(1) - self*P(-VV)/c

@@ -16,7 +16,7 @@ def ChenFoxLyndonBreakpoints(s):
         while j < len(s) and s[i] <= s[j]:
             i = (s[i] == s[j]) and i+1 or k     # Python cond?yes:no syntax
             j += 1
-        if if k > i + 1 and j - i == len(s):
+        if k > i + 1 and j - i == len(s):
             return True
         return False
 
@@ -27,6 +27,6 @@ def isLyndonWord(s):
         while j < len(s) and s[i] <= s[j]:
             i = (s[i] == s[j]) and i+1 or k     # Python cond?yes:no syntax
             j += 1
-        if if k > i + 1 and j - i == len(s):
+        if k > i + 1 and j - i == len(s):
             return True
         return False

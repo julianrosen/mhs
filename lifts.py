@@ -1,12 +1,12 @@
-from mhs_alg import MhsAlg, P
+from .mhs_alg import MhsAlg, P
 from sympy import Sum, var, poly
-from sage_compatibility import Int, Rat, Number, prod, latex, factorial, binomial, bernoulli
-from qsym import qsym
-from global_vars import max_weight, num, mzv_alg, mono_to_basis, mhs_to_mono, mzv_mono, mzv_to_mono, weights, mhs_basis
-from rational import MHS_approx, red
-from misc import psc, psc_, D_add, comps, comps_i, lists
-from tex import error_tex, tex_write, tstr, monomial
-from misc import D_add, wt, bn, decomps, S_min_v
+from .sage_compatibility import Int, Rat, Number, prod, latex, factorial, binomial, bernoulli
+from .qsym import qsym
+from .global_vars import max_weight, num, mzv_alg, mono_to_basis, mhs_to_mono, mzv_mono, mzv_to_mono, weights, mhs_basis
+from .rational import MHS_approx, red
+from .misc import psc, psc_, D_add, comps, comps_i, lists
+from .tex import error_tex, tex_write, tstr, monomial
+from .misc import D_add, wt, bn, decomps, S_min_v
 
 def hp(*s):
     """Weighted multiple harmonic sum p^{|s|}H_{p-1}(s)"""
@@ -59,7 +59,7 @@ def bin_linp(a, b, c, d):
 
 def aperybp():
     """Apery number b_{p-1}, as element of the MhsAlg algebra"""
-    a = sum((-1) ** i * qsym(i * (2,)) for i in range(max_weight() / 2))
+    a = sum((-1) ** i * qsym(i * (2,)) for i in range(max_weight() // 2))
     a = a * a
     a = 1 + a.lcat(4) - 2*a.lcat(3) + a.lcat(2)
     T = sum(a.data[s] * hp(*s) for s in a.data)
@@ -261,7 +261,7 @@ def curp(r, k, err=max_weight() + 1):
 def res_all(k):
     for s in comps(k):
         for y in bn(k - 1):
-            for J in decomps(s, range(k)):
+            for J in decomps(s, list(range(k))):
                 B = True
                 for i, A in enumerate(y):
                     if A == 0 and find_index(J, i) >= find_index(J, i + 1):
@@ -293,7 +293,7 @@ def res_cur(k):
 def res_pr(k):
     for s in comps(k):
         for y in bn(k - 1):
-            for J in decomps(s, range(k)):
+            for J in decomps(s, list(range(k))):
                 B = True
                 for i, A in enumerate(y):
                     if A == 0 and find_index(J, i) >= find_index(J, i + 1):
