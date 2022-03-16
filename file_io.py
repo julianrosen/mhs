@@ -17,7 +17,8 @@ from .misc import lists, comps_i
 from time import time
 from .sage_compatibility import Int, Rat, Number, _sage
 import datetime
-
+from random import shuffle
+from tqdm import tqdm
 
 MHS_DATA_DIR = join(dirname(realpath(__file__)), "mhs_data")
 MZV_DATA_MINE_DIR = join(dirname(realpath(__file__)), "data_mine")
@@ -348,30 +349,32 @@ def create_data(W,z2=False,max_workers=_max_workers,power=None):
     target = 1
     print("MZV data read successfully")
     print("Computing expansion for MHS in terms of MZV (this may take some time)")
+    print("Progress:")
     start_time = time()
     if max_workers > 1:
         #L = [(s,W,D,BB) for s in comps_i(W)]
         #mhs_to_mzv_par = parallel(mhs_to_mzv_modified,max_workers)
         if power is None:
-            if W in [10,11]:
-                power = 10 ** (W-9)
-            elif W >= 12:
-                power = 10 ** (W-10)
+            if W >= 10:
+                power = 10 ** ((W-7)//2)
+#             if W in [10,11]:
+#                 power = 10 ** (W-9)
+#             elif W >= 12:
+#                 power = 10 ** (W-10)
         else:
             power = 10 ** power
         chunksize = max(2,2**W//(max_workers*20))
         with Pool(max_workers) as pool:
             start_time = time()
-            for s in pool.imap_unordered(mhs_to_mzv_modified,((s,W,D,BB) for s in comps_i(W)),chunksize=chunksize):
+            
+            random_comps_list = [(s,W,D,BB) for s in comps_i(W)]
+            shuffle(random_comps_list)
+            for s in tqdm(pool.imap_unordered(mhs_to_mzv_modified,
+                                              random_comps_list,
+                                              chunksize=chunksize), total=num):
         #for s in mhs_to_mzv_par(L):
                 E[s[0][0]] = s[1]
-                count += 1
-                if W >= 10 and count * power > target * num:
-                    est = int((time() - start_time) * (num - count)) // count
-                    est_s = str(datetime.timedelta(seconds=est))
-                    frac = target / power
-                    print(f"{frac} completed (at this rate, {est_s} remaining)",flush=True)
-                    target += 1
+            E = {s: E[s] for s in comps_i(W)}
     else:
         for s in comps_i(W):
             E[s] = mhs_to_mzv(s, W, D, BB)
